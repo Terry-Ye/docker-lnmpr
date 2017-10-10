@@ -1,0 +1,40 @@
+mysql:
+    build: ./mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - /data/mysql:/var/lib/mysql
+      - /data/log/mysql:/var/log/mysql
+      - /data/run/mysqlmysqld:/var/run/mysqld
+
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+
+redis:
+    build: ./redis
+    volumes:
+      - /data/redis:/data
+    ports:
+      - "6379:6379"
+
+php:
+    build: ./php
+    ports:
+      - "9000:9000"
+    links:
+      - "mysql"
+      - "redis"
+    volumes:
+      - /www:/www
+      - /data/php:/data
+
+nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+    links:
+      - "php"
+    volumes:
+      - /www:/www
+      - /data/nginx:/data
+

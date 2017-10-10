@@ -1,4 +1,4 @@
-FROM mysql:5.7
+FROM mysql:5.6
 MAINTAINER AT <terry.dawu@gmail.com>
 
 ENV TZ "Asia/Shanghai"

@@ -11,9 +11,9 @@ RUN    yum install -y gcc automake autoconf libtool make gcc-c++ vixie-cron  wge
     yum clean all
 #Nginx
 RUN cd /tmp && \
-  wget http://nginx.org/download/nginx-1.11.5.tar.gz && \
-  tar xzf nginx-1.11.5.tar.gz && \
-  cd /tmp/nginx-1.11.5 && \
+  wget http://nginx.org/download/nginx-1.12.1.tar.gz && \
+  tar xzf nginx-1.12.1.tar.gz && \
+  cd /tmp/nginx-1.12.1 && \
   ./configure \
     --prefix=/usr/local/nginx \
     --with-http_ssl_module --with-http_sub_module --with-http_dav_module --with-http_flv_module \

@@ -1,23 +1,29 @@
 ### 使用dockerfile 部署 lnmp+redis 环境 
 
-### docker 简介
-docker 可以运行于任何安装现在linux 内核 的x64主机上，推荐内核版本3.8及以上
+### Docker 简介
+Docker 是基于GO语言实现的开源容器项目，现在主流的Linux系统都支持Docker,Docker 的构想是想要实现“Build,Ship and Run Any App, Anywhere”,即通过对应用的封装（Packaging）、分发（Distribution）、部署（Deployment）、运行（Runtime）生命周期进行管理，达到应用组件“一次封装，到处运行”的目的。
+简单的来说，可以将Docker容器理解为一种轻量级的沙盒（sandbox）.每个容器运行着一个应用，不同的容器相互隔离，容器之间也可以通过网络互相通信。且容器的创建和停止都十分快速，几乎跟创建和终止原生应用一致。
+
 
 ### 为什么使用docker
-1. 加速本地的开发和构建流程，容器可以在开发环境构建，然后轻松地提交到测试环境，并最终进入生产环境
-2. 能够在让独立的服务或应用程序在不同的环境中得到相同的运行结果
-3. 创建隔离的环境来进行测试
-4. 高性能、超大规划的宿主机部署
+1. 开发人员可以使用镜像来快速构建一套标准的开发环境
+2. 一次创建与配置，之后可以在任意地方，任意时间让应用正常的运行
+3. 高效的资源利用，docker 容器不需要额外的虚拟化管理程序（虚拟机）
+4. 加速本地的开发和构建流程，容器可以在开发环境构建，然后轻松地提交到测试环境，并最终进入生产环境
+
+
+
 
 
 ### 各环境安装Docker
+**mac**
+docker下载，官网下载太慢，网盘地址 https://pan.baidu.com/s/1i47ETj3 密码: r76s
+
+需要挂载的目录需要在  Docker -> Preferences... -> File Sharing  添加。
+
 **windows 7 安装**
 
 https://segmentfault.com/n/1330000008349110
-
-**mac**
- 
-使用docker toolbox https://github.com/widuu/chinese_docker/blob/master/installation/mac.md 参考使用该文章
 
 **linux**
 
@@ -28,6 +34,9 @@ sudo yum install docker
 sudo systemctl enable docker.service
 #手动启动docker服务器，使⽤用命令 sudo systemctl start docker.service
 ```
+
+
+目录结构 github地址 https://github.com/yeyute/docker-lnmpr 
 
 目录结构 
 
@@ -55,20 +64,88 @@ docker_lnmpr
 ### 建立镜像与容器
 ```
 # build
-docker build -t centos/nginx:v1.11.5 -v /www:/www -v /data:/data  ./nginx
-docker build -t centos/mysql:v5.7 -v /data/mysql:/var/lib/mysql -v /data/logs/mysql:/var/log/mysql  ./mysql
-docker build -t centos/php:v7.0.12 -v /www:/www -v /data:/data  ./php
-docker build -t centos/redis:v3.2.6 -v /data:/data  ./redis
+docker build -t centos/nginx:v1.12.1  ./nginx
+docker build -t centos/mysql:v5.6   ./mysql
+docker build -t centos/php:v7.0.12  ./php
+docker build -t centos/redis:v3.2.6 ./redis
 
 #备注：这里选取了172.172.0.0网段，也可以指定其他任意空闲的网段
 docker network create --subnet=172.171.0.0/16 docker-at
 
 # run
-docker run --name mysql57 --net docker-at --ip 172.171.0.9 -d -p 3306:3306 -v /data/mysql:/var/lib/mysql -v /data/logs/mysql:/var/log/mysql -v /data/run/mysqlmysqld:/var/run/mysqld  -e MYSQL_ROOT_PASSWORD=123456 -it centos/mysql:v5.7
-docker run --name redis326 --net docker-at --ip 172.171.0.10 -d -p 6379:6379  -v /data:/data -it centos/redis:v3.2.6
-docker run --name php7 --net docker-at --ip 172.171.0.8 -d -p 9000:9000 -v /www:/www -v /data:/data --link mysql57:mysql57 --link redis326:redis326 -it centos/php:v7.0.12 
-docker run --name nginx11 --net docker-at --ip 172.171.0.7 -p 80:80 -d -v /www:/www -v /data:/data --link php7:php7 -it centos/nginx:v1.11.5 
+docker run --name mysql56 --net docker-at --ip 172.171.0.9 -d -p 3306:3306 -v /data/mysql:/var/lib/mysql -v /data/log/mysql:/var/log/mysql -v /data/run/mysqlmysqld:/var/run/mysqld  -e MYSQL_ROOT_PASSWORD=123456 -it centos/mysql:v5.6
+docker run --name redis326 --net docker-at --ip 172.171.0.10 -d -p 6379:6379  -v /data/redis:/data -it centos/redis:v3.2.6
+docker run --name php7 --net docker-at --ip 172.171.0.8 -d -p 9000:9000 -v /www:/www -v /data/php:/data --link mysql56:mysql56 --link redis326:redis326 -it centos/php:v7.0.12 
+docker run --name nginx1121 --net docker-at --ip 172.171.0.7 -p 80:80 -d -v /www:/www -v /data/nginx:/data --link php7:php7 -it centos/nginx:v1.12.1 
 ```
+
+以上整合到 docker-compose.yml，如下：
+
+```
+mysql:
+    build: ./mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - /data/mysql:/var/lib/mysql
+      - /data/log/mysql:/var/log/mysql
+      - /data/run/mysqlmysqld:/var/run/mysqld
+
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+
+redis:
+    build: ./redis
+    volumes:
+      - /data/redis:/data
+    ports:
+      - "6379:6379"
+
+php:
+    build: ./php
+    ports:
+      - "9000:9000"
+    links:
+      - "mysql"
+      - "redis"
+    volumes:
+      - /www:/www
+      - /data/php:/data
+      - 
+
+nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+    links:
+      - "php"
+    volumes:
+      - /www:/www
+      - /data/nginx:/data
+
+
+```
+
+### 搭建私有仓库
+
+
+```
+# 使用官方提供的registry 镜像来简单的搭建本地仓库
+docker run -d -p 5000:5000 -v /data/registry:/tmp/registry registry
+
+# 标记镜像
+docker tag centos/mysql:v5.6 192.168.199.128:5000/mysql56
+
+# 上传镜像
+docker push 192.168.199.128:5000/mysql56
+
+# 下载镜像
+docker pull 192.168.199.128:5000/mysql56
+
+```
+
+
+
 
 
 ### 常用命令
@@ -129,10 +206,7 @@ docker rmi $(docker images | awk '/^<none>/ { print $3 }')
 
 
 ### 问题点整理
-* 注意挂载目录的权限问题，不然容器成功启动几秒后立刻关闭，例：以下/data/run/mysql 目录没权限的情况下就会出现刚才那种情况
-		```
-		docker run --name mysql57 -d -p 3306:3306 -v /data/mysql:/var/lib/mysql -v /data/logs/mysql:/var/log/mysql -v /data/run/mysql:/var/run/mysqld -e MYSQL_ROOT_PASSWORD=123456 -it centos/mysql:v5.7
-		```
+* 注意容器内是没写的权限的
 
 * 需要注意php.ini 中的目录对应  mysql 的配置的目录需要挂载才能获取文件内容，不然php连接mysql失败
 
@@ -148,9 +222,10 @@ docker rmi $(docker images | awk '/^<none>/ { print $3 }')
 		
 		```
 
-* 宿主机 无法访问docker的容器（nginx） https://segmentfault.com/q/1010000008893871，个人提问与回答都在里面
 
-* 使用php连接不上redis 
+
+### 使用php连接不上redis 
+
 	```
 	# 错误的
 	$redis = new Redis;
@@ -191,3 +266,31 @@ docker rmi $(docker images | awk '/^<none>/ { print $3 }')
 	$redis = new Redis;
 	$rs = $redis->connect('172.171.0.10', 6379);
 	```
+
+以上情况虽然容器之间关联了，但是容器之间的通讯需要用搭建的网段的连接。
+假设：只有mysql 的容器，我们机器挂载了3306的端口，我们本地可以127.0.0.1去连接mysql容器服务
+但是假设php服务也在容器里面，这时就不可以这么连接，因为是php容器去连接mysql容器，所以需要一个连接的ip。
+
+### 私有仓库push 不上
+
+```
+Get https://192.168.199.128:5000/v2/: http: server gave HTTP response to HTTPS client
+```
+mac 版的 Docker -> Preferences... -> daemon -> insecure registries 添加 192.168.199.128:5000，因为新版本对安全性比较高，会要求仓库支持ssl/tls 证书， 添加这个表示信任这个私有仓库
+
+
+### 安全检测工具
+Docker bench,clair 等
+
+### 镜像体积优化
+1. centos的基础镜像接近200m 可以考虑使用Alpine 的基础镜像，才4.999M
+2. Docker 镜像的储存原理是分层的,docker build 的过程就是 docker 运行了一个容器，然后执行 Dockerfile 里写的命令。并且每一个命令都会 commit 一下，每一次 commit 都是一层一层的叠加在原来的镜像上，也就是说在某一层里增加了一个文件，在下一层里删除这个文件，是没有任何效果的，镜像体积是不变的，可能反而会增加
+
+### docker 三剑客之Docker Compose
+
+注：需要安装
+```
+pip install -U docker-compose
+```
+
+
