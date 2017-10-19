@@ -75,8 +75,17 @@ docker network create --subnet=172.171.0.0/16 docker-at
 # run
 docker run --name mysql56 --net docker-at --ip 172.171.0.9 -d -p 3306:3306 -v /data/mysql:/var/lib/mysql -v /data/log/mysql:/var/log/mysql -v /data/run/mysqlmysqld:/var/run/mysqld  -e MYSQL_ROOT_PASSWORD=123456 -it centos/mysql:v5.6
 docker run --name redis326 --net docker-at --ip 172.171.0.10 -d -p 6379:6379  -v /data/redis:/data -it centos/redis:v3.2.6
+
 docker run --name php7 --net docker-at --ip 172.171.0.8 -d -p 9000:9000 -v /www:/www -v /data/php:/data --link mysql56:mysql56 --link redis326:redis326 -it centos/php:v7.0.12 
 docker run --name nginx1121 --net docker-at --ip 172.171.0.7 -p 80:80 -d -v /www:/www -v /data/nginx:/data --link php7:php7 -it centos/nginx:v1.12.1 
+```
+
+
+### 从私有仓库
+
+```
+docker pull 192.168.1.80:5000/redis:v3.2.6
+docker run --name redis326 --net docker-at --ip 172.171.0.10 -d -p 6379:6379  -v /data/redis:/data -it 192.168.1.80:5000/redis:v3.2.6
 ```
 
 以上整合到 docker-compose.yml，如下：
@@ -184,10 +193,14 @@ docker rmi $(docker images | awk '/^<none>/ { print $3 }')
 **进入容器的命令**
 
 ```
+# linux 进入方法
 [root@iZ287mq5dooZ nginx]# docker inspect --format "{{ .State.Pid }}" 54a454b827e5(容器ID)
 20426
 [root@iZ287mq5dooZ nginx]# nsenter --target 20426 --mount --uts --ipc --net --pid
 [root@bcb14764a7a3 /]#
+
+# mac 进入方法
+docker exec -it 54a454b827e5 /bin/bash
 ```
 
 ### dockerfile 语法
