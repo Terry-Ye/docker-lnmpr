@@ -7,7 +7,7 @@ COPY redis-3.0.0.tgz /tmp/redis-3.0.0.tgz
 COPY swoole-src-1.9.21.zip /tmp/swoole-src-1.9.21.zip 
 
 RUN yum -y update && \
-    yum install -y gcc automake autoconf libtool make gcc-c++ vixie-cron  wget zlib php-devel php-pear httpd-devel  file openssl-devel sharutils zip  bash vim cyrus-sasl-devel libmemcached libmemcached-devel libyaml libyaml-devel unzip libvpx-devel openssl-devel ImageMagick-devel  autoconf  tar gcc  -devel gd-devel libmcrypt-devel libmcrypt mcrypt mhash libmcrypt libmcrypt-devel libxml2 libxml2-devel bzip2 bzip2-devel curl curl-devel libjpeg libjpeg-devel libpng libpng-devel freetype-devel bison libtool-ltdl-devel net-tools && \
+    yum install -y gcc automake autoconf libtool make gcc-c++ vixie-cron  wget zlib php-devel php-pear httpd-devel  file openssl-devel sharutils zip  bash vim cyrus-sasl-devel libmemcached libmemcached-devel libyaml libyaml-devel unzip libvpx-devel openssl-devel ImageMagick-devel  autoconf  tar gcc  -devel gd-devel libmcrypt-devel libmcrypt mcrypt mhash libmcrypt libmcrypt-devel libxml2 libxml2-devel bzip2 bzip2-devel curl curl-devel libjpeg libjpeg-devel libpng libpng-devel freetype-devel bison libtool-ltdl-devel net-tools epel-release certbot-nginx && \
     yum clean all && \
     rpm -ivh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm && \
     yum install -y libmcrypt-devel && \

@@ -65,7 +65,7 @@ docker_lnmpr
 ```
 # build
 docker build -t centos/nginx:v1.12.1  ./nginx
-docker build -t centos/mysql:v5.6   ./mysql
+docker build -t centos/mysql:v5.7   ./mysql
 docker build -t centos/php:v7.0.12  ./php
 docker build -t centos/redis:v3.2.6 ./redis
 
@@ -73,11 +73,18 @@ docker build -t centos/redis:v3.2.6 ./redis
 docker network create --subnet=172.171.0.0/16 docker-at
 
 # run
-docker run --name mysql56 --net docker-at --ip 172.171.0.9 -d -p 3306:3306 -v /data/mysql:/var/lib/mysql -v /data/log/mysql:/var/log/mysql -v /data/run/mysqlmysqld:/var/run/mysqld  -e MYSQL_ROOT_PASSWORD=123456 -it centos/mysql:v5.6
-docker run --name redis326 --net docker-at --ip 172.171.0.10 -d -p 6379:6379  -v /data/redis:/data -it centos/redis:v3.2.6
+docker run --name mysql56  --restart=always --net docker-at --ip 172.171.0.9 -d -p 3306:3306 -v /data/mysql:/var/lib/mysql -v /data/logs/mysql:/var/log/mysql -v /data/run/mysqld:/var/run/mysqld  -e MYSQL_ROOT_PASSWORD=123456 -it centos/mysql:v5.6
 
-docker run --name php7 --net docker-at --ip 172.171.0.8 -d -p 9000:9000 -v /www:/www -v /data/php:/data --link mysql56:mysql56 --link redis326:redis326 -it centos/php:v7.0.12 
-docker run --name nginx1121 --net docker-at --ip 172.171.0.7 -p 80:80 -d -v /www:/www -v /data/nginx:/data --link php7:php7 -it centos/nginx:v1.12.1 
+docker run --name mysql57 --restart=always --net docker-at --ip 172.171.0.9 -d -p 3306:3306 -v /data/mysql:/var/lib/mysql -v /data/logs/mysql:/var/log/mysql -v /data/run/mysqld:/var/run/mysqld  -e MYSQL_ROOT_PASSWORD=123456 -it centos/mysql:v5.7
+
+
+docker run --name redis326 --restart=always --net docker-at --ip 172.171.0.10 -d -p 6379:6379  -v /data:/data -it centos/redis:v3.2.6
+
+docker run --name php7 --restart=always --net docker-at --ip 172.171.0.8 -d -p 9000:9000 -v /www:/www -v /data/php:/data --link mysql56:mysql56 --link redis326:redis326 -it centos/php:v7.0.12 
+docker run --name nginx1121 --restart=always --net docker-at --ip 172.171.0.7 -p 80:80 -d -v /www:/www -v /data/nginx:/data --link php7:php7 -it centos/nginx:v1.12.1 
+
+
+
 ```
 
 
@@ -200,7 +207,7 @@ docker rmi $(docker images | awk '/^<none>/ { print $3 }')
 [root@bcb14764a7a3 /]#
 
 # mac 进入方法
-docker exec -it 54a454b827e5 /bin/bash
+pip install --upgrade --force-reinstall 'requests==2.6.0' urllib3 1af288dc3962 /bin/bash
 ```
 
 ### dockerfile 语法
@@ -306,4 +313,8 @@ Docker bench,clair 等
 pip install -U docker-compose
 ```
 
+
+
+### 需改进
+1. php 扩展加上UUID
 
